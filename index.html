@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<title>المصحف المعلم التفاعلي لأحكام التجويد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/style.css">
+<script>try{var t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<header class="top">
+  <h1>المُصۡحَفُ المُعَلِّمُ</h1>
+  <select id="surahSel" aria-label="اختيار السورة"></select>
+  <button id="panelBtn" class="icon only-m" aria-label="الأحكام">🎨 الأحكام</button>
+  <button id="themeBtn" class="icon" aria-label="الوضع الليلي">🌙</button>
+</header>
+<main class="layout">
+  <aside id="panel" class="panel">
+    <div class="sheet-head only-m"><b>أحكام التجويد</b><button id="closePanel" class="icon">✕</button></div>
+    <section id="detail" class="card detail"><p class="muted">مرّر على أي كلمة (أو المسها) لترى أحكامها، واضغط عليها لتثبيت التفاصيل هنا.</p></section>
+    <div class="seg" role="tablist">
+      <button data-mode="deg" class="on">بحسب مقدار المد/النوع</button>
+      <button data-mode="bab">بحسب الباب</button>
+    </div>
+    <button id="clearBtn" class="clear" hidden>✕ إلغاء الفلتر وإظهار الكل</button>
+    <div id="filters"></div>
+    <section id="ruleInfo" class="card info" hidden></section>
+  </aside>
+  <section class="mushaf">
+    <h2 id="surahTitle" class="surah-title"></h2>
+    <div id="basmala" class="basmala" hidden>بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</div>
+    <div id="quran" class="quran" dir="rtl"></div>
+  </section>
+</main>
+<div id="scrim" class="scrim" hidden></div>
+<div id="tip" class="tip" hidden></div>
+<script src="./js/app.js"></script>
+</body>
+</html>
