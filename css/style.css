@@ -1,0 +1,58 @@
+:root{--bg:#f7f4ec;--surface:#fff;--ink:#2c241b;--muted:#6b5e4f;--line:#e6dcc3;--accent:#0f766e;--gold:#b59124;
+--g-m6:#dc2626;--g-mj:#ea580c;--g-mw:#b45309;--g-m2:#a16207;--g-gh:#059669;--g-id:#4b5563;--g-tf:#2563eb;--g-tq:#9333ea;--g-ql:#0891b2;--g-hm:#db2777}
+[data-theme=dark]{--bg:#12110f;--surface:#1c1a17;--ink:#ece6d8;--muted:#a79d8a;--line:#3a352c;--accent:#2dd4bf;--gold:#e7c873;
+--g-m6:#f87171;--g-mj:#fb923c;--g-mw:#fbbf24;--g-m2:#facc15;--g-gh:#34d399;--g-id:#9ca3af;--g-tf:#60a5fa;--g-tq:#c084fc;--g-ql:#22d3ee;--g-hm:#f472b6}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Cairo,sans-serif;transition:background .2s,color .2s}
+button,select{font:inherit;color:inherit}
+.top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:.6rem;padding:.5rem .8rem;padding-top:calc(.5rem + env(safe-area-inset-top));background:var(--surface);border-bottom:1px solid var(--line)}
+.top h1{margin:0;font:400 1.4rem "Amiri Quran",serif;color:var(--gold);margin-inline-end:auto;white-space:nowrap}
+#surahSel{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:.4rem .6rem;max-width:42vw;min-width:0}
+.icon{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:.4rem .7rem;cursor:pointer}
+.layout{display:grid;grid-template-columns:360px 1fr;gap:1rem;max-width:1400px;margin:0 auto;padding:1rem}
+.panel{position:sticky;top:4.2rem;align-self:start;max-height:calc(100vh - 5rem);overflow:auto;display:flex;flex-direction:column;gap:.7rem;padding-inline-end:.2rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.8rem;font-size:.9rem;line-height:1.8}
+.muted{color:var(--muted);margin:0}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{flex:1;border:0;background:none;padding:.4rem;border-radius:8px;cursor:pointer;font-size:.8rem}
+.seg .on{background:var(--accent);color:#fff}
+.clear{background:none;border:1px dashed var(--accent);color:var(--accent);border-radius:8px;padding:.4rem;cursor:pointer}
+details{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:.4rem}
+summary{cursor:pointer;padding:.5rem .7rem;font-weight:700;font-size:.9rem;display:flex;gap:.5rem;align-items:center}
+summary .all{margin-inline-start:auto;font-size:.7rem;font-weight:400;border:1px solid var(--line);border-radius:6px;padding:0 .4rem;background:var(--bg)}
+.chips{display:flex;flex-wrap:wrap;gap:.35rem;padding:.2rem .6rem .6rem}
+.chip{display:inline-flex;gap:.3rem;align-items:center;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:.25rem .65rem;font-size:.8rem;cursor:pointer}
+.chip i{width:.65rem;height:.65rem;border-radius:50%;flex:none}
+.chip small{opacity:.6}.chip.zero{opacity:.4}
+.chip.on{background:var(--c);border-color:var(--c);color:#fff}.chip.on i{background:#fff!important}
+.info h3{margin:0 0 .4rem;font-size:1rem}
+.info dl{margin:0}.info dt{font-weight:700;font-size:.78rem;color:var(--muted);margin-top:.4rem}.info dd{margin:0}
+.mushaf{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.2rem 1rem;box-shadow:inset 0 0 0 5px var(--bg),inset 0 0 0 6px var(--gold);min-height:70vh}
+.surah-title{text-align:center;font:400 1.9rem "Amiri Quran",serif;color:var(--gold);margin:.5rem 0}
+.basmala{text-align:center;font:400 1.8rem "Amiri Quran",serif;margin-bottom:.8rem}
+.quran{max-width:760px;margin:auto;font:400 2rem/2.6 "Amiri Quran",serif;text-align:justify;text-align-last:center;user-select:none}
+.w{display:inline-block;padding:0 3px;border-radius:6px;cursor:pointer;margin:0 1px}
+.w:hover,.w.sel{background:color-mix(in srgb,var(--gold) 20%,transparent)}
+.tc{font-weight:700}
+.filtering .tc:not(.on){color:inherit!important;font-weight:400}
+.filtering .w.dim{opacity:.28}
+.ayah{color:var(--gold);font-size:1.3rem;margin:0 .3rem}
+.detail .word{font:400 2.2rem "Amiri Quran",serif;text-align:center}
+.row{display:flex;align-items:center;gap:.5rem;padding:.3rem 0;border-top:1px dashed var(--line)}
+.row .lt{font:400 1.6rem/1.4 "Amiri Quran",serif;min-width:2.2rem;text-align:center;border-radius:8px;border:2px solid var(--c);color:var(--c)}
+.row .ar{color:var(--c);font-size:1.1rem}
+.row b{color:var(--c)}.row button{margin-inline-start:auto;font-size:.7rem;border:1px solid var(--line);background:var(--bg);border-radius:6px;cursor:pointer;padding:.1rem .4rem}
+.tip{position:fixed;z-index:50;background:var(--surface);border:1px solid var(--gold);border-radius:12px;padding:.5rem .8rem;box-shadow:0 8px 24px #0004;pointer-events:none;max-width:min(320px,92vw);font-size:.85rem}
+.tip .word{font:400 1.7rem "Amiri Quran",serif;text-align:center;line-height:1.8}
+.tip .none{color:var(--muted);text-align:center}
+.scrim{position:fixed;inset:0;background:#0007;z-index:39}
+.only-m{display:none}
+@media(max-width:900px){
+ .only-m{display:inline-block}.sheet-head.only-m{display:flex}
+ .layout{grid-template-columns:1fr;padding:.5rem}
+ .quran{font-size:1.65rem}
+ .panel{position:fixed;inset:auto 0 0 0;top:auto;z-index:40;max-height:78vh;background:var(--bg);border-radius:18px 18px 0 0;padding:.8rem;padding-bottom:calc(.8rem + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .25s;box-shadow:0 -8px 30px #0005}
+ .panel.open{transform:none}
+ .sheet-head{justify-content:space-between;align-items:center}
+ #surahSel{max-width:36vw}.top h1{font-size:1.1rem}
+}
