@@ -95,9 +95,10 @@ async function loadSurah(id) {
   if (!quranLines) quranLines = (await (await fetch('./data/quran-uthmani-min.txt')).text()).split('\n');
   const box = document.createDocumentFragment(); WR = {}; counts = {};
   quranLines.filter(l => l.startsWith(id + '|')).forEach(l => {
-    const [, ay, txt] = l.split('|'); let t = txt.trim();
-    if (ay == 1 && id !== 1 && id !== 9) t = t.replace(/^بِسمِ اللَّهِ الرَّحمٰنِ الرَّحيمِ ?/, '');
-    t.split(' ').filter(Boolean).forEach((w, n) => {
+    const [, ay, txt] = l.split('|'); let words = txt.trim().split(' ').filter(Boolean);
+    // البسملة (4 كلمات) تُعرض تحت اسم السورة فقط، ولا تُحتسب في ترقيم الكلمات ولا الأحكام (عدا الفاتحة)
+    if (ay == 1 && id !== 1 && id !== 9) words = words.slice(4);
+    words.forEach((w, n) => {
       const key = `${id}:${ay}:${n + 1}`, rules = normalize(tajweed[key] || []);
       WR[key] = { w, rules }; rules.forEach(r => counts[r.type] = (counts[r.type] || 0) + 1);
       const s = document.createElement('span'); s.className = 'w'; s.dataset.key = key; s.innerHTML = wordHTML(w, rules); box.appendChild(s);
