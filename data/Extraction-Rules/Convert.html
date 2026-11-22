@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>محوّل أحكام التجويد (TSV ← JSON)</title>
+<style>
+:root{--bg:#f7f4ec;--s:#fff;--ink:#2c241b;--mu:#6b5e4f;--ln:#e6dcc3;--ac:#0f766e;--er:#b91c1c;--wr:#b45309}
+@media(prefers-color-scheme:dark){:root{--bg:#12110f;--s:#1c1a17;--ink:#ece6d8;--mu:#a79d8a;--ln:#3a352c;--ac:#2dd4bf;--er:#f87171;--wr:#fbbf24}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.8 Cairo,Tahoma,sans-serif;padding:1rem}
+main{max-width:900px;margin:auto}h1{font-size:1.4rem;margin:.2rem 0 1rem}
+.card{background:var(--s);border:1px solid var(--ln);border-radius:12px;padding:1rem;margin-bottom:1rem}
+label{display:block;font-weight:700;margin-top:.6rem}small,.mu{color:var(--mu)}
+input[type=file]{display:block;width:100%;margin:.2rem 0}
+button{background:var(--ac);color:#fff;border:0;border-radius:8px;padding:.6rem 1.4rem;font:inherit;cursor:pointer;margin-top:.8rem}
+table{width:100%;border-collapse:collapse;font-size:.85rem}td,th{border:1px solid var(--ln);padding:.25rem .5rem;text-align:right;vertical-align:top}
+.er{color:var(--er)}.wr{color:var(--wr)}.ok{color:var(--ac)}a.dl{display:inline-block;margin:.2rem .3rem;padding:.3rem .8rem;border:1px solid var(--ac);border-radius:8px;color:var(--ac);text-decoration:none}
+.scroll{max-height:320px;overflow:auto}
+</style>
+</head>
+<body><main>
+<h1>محوّل أحكام التجويد: ملف TSV ← JSON بصيغة الموقع</h1>
+<div class="card">
+  <label>1) نص القرآن (quran-uthmani-min.txt) <small>— مطلوب</small></label><input type="file" id="fq" accept=".txt">
+  <label>2) ملفات الاستخراج TSV <small>— مطلوب، يمكن اختيار عدة ملفات (صفحات) معاً</small></label><input type="file" id="ft" accept=".tsv,.txt,.csv" multiple>
+  <label>3) ملفات surah_N.json الحالية <small>— اختياري، للدمج معها بدل البدء من الصفر</small></label><input type="file" id="fe" accept=".json" multiple>
+  <label><input type="checkbox" id="cf" checked> تضمين الصفوف المعلّمة للمراجعة (Review_Flag=1)</label>
+  <button id="go">تحويل وفحص</button>
+</div>
+<div id="out"></div>
+</main>
+<script>
+// CORE START
+const MARK=/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g;
+const strip=s=>(s||'').replace(MARK,'');
+const RULE_CODE={'المد اللازم الكلمي المثقل':'madd_lazim_kalimi_muthaqqal','المد اللازم الكلمي المخفف':'madd_lazim_kalimi_mukhaffaf','المد اللازم الحرفي المثقل':'madd_lazim_harfi_muthaqqal','المد اللازم الحرفي المخفف':'madd_lazim_harfi_mukhaffaf','المد المتصل':'madd_muttasil','المد المنفصل':'madd_munfasil','مد الصلة الكبرى':'madd_silah_kubra','المد العارض للسكون':'madd_ared','مد اللين':'madd_leen','المد الطبيعي':'madd_tabiee','مد الصلة الصغرى':'madd_silah_sughra','مد البدل':'madd_badal','مد العوض':'madd_iwad','الإخفاء الحقيقي':'ikhfa','الإخفاء الشفوي':'ikhfa_shafawi','غنة النون والميم المشددة':'ghunnah','الإقلاب':'iqlab','الإدغام بغنة':'idgham_ghunnah','الإدغام الشفوي':'idgham_shafawi','إدغام متماثل':'idgham_other','الإدغام بغير غنة':'idgham_no_ghunnah','الإظهار الحلقي':'idhar_halqi','الإظهار الشفوي':'idhar_shafawi','تفخيم الحروف المستعلية':'tafkheem_general','تفخيم اللام':'tafkheem_lam','تفخيم الراء':'tafkheem_ra','ترقيق الحروف':'tarqeeq_general','ترقيق اللام':'tarqeeq_lam','ترقيق الراء':'tarqeeq_ra','القلقلة الصغرى':'qalqalah_sughra','القلقلة الوسطى':'qalqalah_wusta','القلقلة الكبرى':'qalqalah_kubra','همس':'hamas','تكتب ولا تلفظ':'silent'};
+const KNOWN=new Set([...Object.values(RULE_CODE),'qalqalah','madd_lazim']);
+const ALIAS={idghaam_ghunnah:'idgham_ghunnah',idgham_bighunnah:'idgham_ghunnah',idghaam_no_ghunnah:'idgham_no_ghunnah',idgham_bila_ghunnah:'idgham_no_ghunnah',idghaam_shafawi:'idgham_shafawi',ikhfaa:'ikhfa',ikhfaa_shafawi:'ikhfa_shafawi',lam_shamsiya:'silent',lam_qamariya:null,tafkheem:'tafkheem_general',tarqeeq:'tarqeeq_general',idghaam_mutajanisayn:'idgham_other',idghaam_mutaqaribayn:'idgham_other',idgham_mutamathil:'idgham_other'};
+function convert(quran,tsvs,existing,o){
+  const words={};
+  quran.split('\n').forEach(l=>{ if(!l.includes('|')||l[0]==='#')return;
+    const [s,a,...t]=l.split('|'); let w=t.join('|').trim().split(/\s+/).filter(Boolean);
+    if(+a===1&&+s!==1&&+s!==9) w=w.slice(4);   // حذف البسملة (4 كلمات)
+    words[+s+':'+ +a]=w; });
+  const acc={},errors=[],warns=[],uncls=[]; let total=0,ok=0,skipped=0;
+  tsvs.forEach(({name,text})=>text.split('\n').forEach((line,i)=>{
+    line=line.replace(/\r$/,''); if(!line.trim())return;
+    const c=line.split('\t').map(x=>x.trim()); if(c[0]==='Page')return;
+    const where=`${name}:${i+1}`; total++;
+    const err=m=>errors.push({where,msg:m});
+    if(c.length<8) return err('عدد الأعمدة أقل من المطلوب ('+c.length+') — هل الفاصل Tab؟');
+    const S=+c[1],A=+c[2],W=+c[3],occ=+c[6]||1,rule=c[7],flag=c[10]==='1';
+    if(!(S>0&&A>0&&W>0)) return err('رقم السورة/الآية/الكلمة غير صالح — هل كُتب اسم السورة بدل الرقم؟');
+    if(rule.startsWith('غير_مصنف')) return uncls.push({where,key:`${S}:${A}:${W}`,rule,label:c[9]||''});
+    const type=RULE_CODE[rule]; if(!type) return err('حكم غير موجود في القاموس: '+rule);
+    if(flag&&!o.flagged){skipped++;return;}
+    const ws=words[S+':'+A]; if(!ws) return err('الآية غير موجودة في نص القرآن');
+    const tw=ws[W-1]; if(!tw) return err(`الكلمة رقم ${W} غير موجودة (الآية فيها ${ws.length} كلمة)`);
+    if(c[4]!==tw){ if(strip(c[4])===strip(tw)) warns.push({where,msg:'اختلاف في التشكيل — اعتُمد نص الملف'}); else return err(`الكلمة المكتوبة (${c[4]}) ≠ كلمة النص (${tw})`); }
+    const ch=Array.from(tw),L=Array.from(c[5]||'')[0]; let idx=-1,n=0;
+    for(let k=0;k<ch.length;k++) if(ch[k]===L&&++n===occ){idx=k;break;}
+    if(idx<0) return err(`الحرف (${L||'فارغ'}) رقم ${occ} غير موجود في الكلمة ${tw}`);
+    if(c[8]&&ws[W]&&strip(c[8])!==strip(ws[W])) warns.push({where,msg:'Next_Word لا تطابق الكلمة التالية في النص'});
+    (((acc[S]??={})[`${S}:${A}:${W}`]??={})[type]??=new Set()).add(idx); ok++;
+  }));
+  // الدمج مع الملفات الحالية + بناء الناتج
+  const result={};
+  Object.keys(acc).forEach(S=>{
+    const words2=acc[S], ex=(existing&&existing[S])||{}, keys=new Set([...Object.keys(ex),...Object.keys(words2)]), obj={};
+    [...keys].sort((x,y)=>{const a=x.split(':').map(Number),b=y.split(':').map(Number);return a[1]-b[1]||a[2]-b[2]}).forEach(k=>{
+      const m={};
+      (ex[k]||[]).forEach(r=>{ const t=r.type in ALIAS?ALIAS[r.type]:r.type; if(t&&KNOWN.has(t)) (m[t]??=new Set()), r.chars.forEach(x=>m[t]&&m[t].add(x)); });
+      Object.entries(words2[k]||{}).forEach(([t,s])=>{(m[t]??=new Set()); s.forEach(x=>m[t].add(x));});
+      if(Object.keys(m).some(t=>t.startsWith('qalqalah_'))) delete m.qalqalah;      // الدقيق يستبدل العام
+      if(Object.keys(m).some(t=>t.startsWith('madd_lazim_'))) delete m.madd_lazim;
+      const arr=Object.entries(m).filter(([,s])=>s.size).map(([type,s])=>({type,chars:[...s].sort((a,b)=>a-b)}));
+      if(arr.length) obj[k]=arr;
+    });
+    result[S]=obj;
+  });
+  return {result,errors,warns,uncls,total,ok,skipped};
+}
+const fmt=o=>'{\n'+Object.entries(o).map(([k,v])=>`  "${k}": [\n`+v.map(r=>`    {"type": "${r.type}", "chars": [${r.chars.join(', ')}]}`).join(',\n')+'\n  ]').join(',\n')+'\n}\n';
+// CORE END
+
+const $=id=>document.getElementById(id), esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const tbl=(rows,cls)=>rows.length?`<div class="scroll"><table><tr><th>الموضع (ملف:سطر)</th><th>التفصيل</th></tr>${rows.slice(0,300).map(r=>`<tr><td>${esc(r.where)}</td><td class="${cls}">${esc(r.msg||r.rule+' — '+r.label)}</td></tr>`).join('')}</table></div>${rows.length>300?'<p class="mu">… وأكثر من 300 (أُظهر أول 300)</p>':''}`:'<p class="mu">لا شيء</p>';
+$('go').onclick=async()=>{
+  const out=$('out');
+  if(!$('fq').files[0]||!$('ft').files.length){out.innerHTML='<div class="card er">اختر ملف نص القرآن وملف TSV واحداً على الأقل.</div>';return;}
+  const quran=await $('fq').files[0].text();
+  const tsvs=await Promise.all([...$('ft').files].map(async f=>({name:f.name,text:await f.text()})));
+  const existing={};
+  for(const f of $('fe').files){const m=f.name.match(/(\d+)/); if(m){try{existing[+m[1]]=JSON.parse(await f.text())}catch{out.innerHTML=`<div class="card er">ملف JSON تالف: ${esc(f.name)}</div>`;return;}}}
+  const r=convert(quran,tsvs,existing,{flagged:$('cf').checked});
+  const links=Object.entries(r.result).map(([s,o])=>{const u=URL.createObjectURL(new Blob([fmt(o)],{type:'application/json'}));return `<a class="dl" href="${u}" download="surah_${s}.json">⬇ surah_${s}.json (${Object.keys(o).length} كلمة)</a>`}).join('');
+  out.innerHTML=`<div class="card"><b>الملخص:</b> ${r.total} صف — <span class="ok">${r.ok} ناجح</span> — <span class="er">${r.errors.length} خطأ</span> — <span class="wr">${r.warns.length} تنبيه</span> — ${r.uncls.length} غير مصنف${r.skipped?` — ${r.skipped} معلّم متجاوَز`:''}
+  <p>${links||'<span class="er">لا ملفات ناتجة (لا صفوف صالحة).</span>'}</p>
+  ${r.errors.length?'<p class="er">⚠ الصفوف المرفوضة لم تدخل الـ JSON. صحّحها في ملف TSV وأعد التحويل.</p>':''}</div>
+  <div class="card"><b class="er">أخطاء (${r.errors.length})</b>${tbl(r.errors,'er')}</div>
+  <div class="card"><b>غير مصنف — لم يدخل الـ JSON (${r.uncls.length})</b>${tbl(r.uncls,'')}</div>
+  <div class="card"><b class="wr">تنبيهات (${r.warns.length})</b>${tbl(r.warns,'wr')}</div>`;
+};
+</script>
+</body></html>
